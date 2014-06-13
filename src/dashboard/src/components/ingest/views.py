@@ -101,6 +101,15 @@ def ingest_status(request, uuid=None):
             item['uuid'] = item['sipuuid']
             item['id'] = item['sipuuid']
             del item['sipuuid']
+
+            # embed accession ID in status data (for dip upload target Ticket #6823)
+            try:
+                sip = models.SIP.objects.get(uuid=item['uuid'])
+                file = models.File.objects.filter(sip=sip)[0]
+                item['accession_id'] = file.transfer.accessionid
+            except:
+                pass
+
             item['jobs'] = []
             for job in jobs:
                 newJob = {}
@@ -190,7 +199,6 @@ def ingest_metadata_edit(request, uuid, id=None):
     name = utils.get_directory_name_from_job(jobs[0])
 
     return render(request, 'ingest/metadata_edit.html', locals())
-
 
 def aic_metadata_add(request, uuid):
     sip_type_id = ingest_sip_metadata_type_id()
