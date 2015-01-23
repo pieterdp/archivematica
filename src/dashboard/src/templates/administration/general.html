@@ -15,6 +15,8 @@
 
   <div class="row">
 
+    {% url 'components.filesystem_ajax.cleanup_processing_space' as cleanup %}
+
     {% include "administration/sidebar.html" %}
 
     <div class="span12">
@@ -24,6 +26,14 @@
       </div>
 
       <h3>General configuration</h3>
+
+      {% if request.user.is_superuser %}
+        <h4>Remove leftover processing files</h4>
+
+        <p>This will remove backups of stored DIPs, failed and rejected AIPs, and the contents of the transfer staging area. Please note that this cannot be undone!</p>
+
+        <a href="{{ cleanup }}">Cleanup processing directories</a>
+      {% endif %}
 
       <form method='POST'>
         <h4>Interface options</h4>

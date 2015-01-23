@@ -23,6 +23,7 @@ import re
 import shutil
 import sys
 import tempfile
+import traceback
 import uuid
 
 import django.http
@@ -37,6 +38,9 @@ import archivematicaFunctions
 import databaseFunctions
 import elasticSearchFunctions
 import storageService as storage_service
+
+sys.path.append("/usr/lib/archivematica/MCPClient/clientScripts")
+from cleanupProcessingDirectories import clean_all_processing_directories
 
 # for unciode sorting support
 import locale
@@ -711,3 +715,19 @@ def download_fs(request):
     except ValueError:
         raise django.http.Http404
 
+
+def cleanup_processing_space(request):
+    try:
+        cleanup_processing_space()
+        response = {
+            "error": False,
+            "message": "Processing space successfully cleaned."
+        }
+    except Exception as e:
+        response = {
+            "error": True,
+            "message": "Processing space unable to be cleaned: {}".format(str(e)),
+            "traceback": traceback.format_exc()
+        }
+
+    return helpers.json_response(response)
