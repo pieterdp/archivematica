@@ -292,13 +292,14 @@ def set_up_mapping(conn, index):
         print 'AIP file mapping created.'
 
 
-def _get_sip_dc_metadata(root):
+def _get_sip_dc_metadata(root, require_dc=True):
     """
     Get SIP-level DC metadata from the METS.
 
     :param root: Root of the parsed METS
     :return: Element for <dcterms:dublincore> or None
     """
+    # TODO remove assumption of dublincore?
     nsmap = { #TODO use XML namespaces from archivematicaXMLNameSpaces.py
         'dcterms': 'http://purl.org/dc/terms/',
         'dc': 'http://purl.org/dc/elements/1.1/',
@@ -478,6 +479,7 @@ def index_mets_file_metadata(conn, uuid, metsFilePath, index, type, sipName):
             is_part_of = dublincore.findtext('dcterms:isPartOf', namespaces=nsmap)
 
     # establish structure to be indexed for each file item
+    dmdSecData = rename_dict_keys_with_child_dicts(normalize_dict_values(dmdSecData))
     fileData = {
         'archivematicaVersion': version.get_version(),
         'AIPUUID': uuid,
@@ -489,7 +491,7 @@ def index_mets_file_metadata(conn, uuid, metsFilePath, index, type, sipName):
         'isPartOf': is_part_of,
         'AICID': aic_identifier,
         'METS': {
-            'dmdSec': rename_dict_keys_with_child_dicts(normalize_dict_values(dmdSecData)),
+            'dmdSec': [dmdSecData],
             'amdSec': {},
         },
         'origin': getDashboardUUID(),
@@ -526,6 +528,8 @@ def index_mets_file_metadata(conn, uuid, metsFilePath, index, type, sipName):
             xml = ElementTree.tostring(amdSecInfo)
             indexData['METS']['amdSec'] = rename_dict_keys_with_child_dicts(normalize_dict_values(xmltodict.parse(xml)))
 
+            # Index file-level dmdSec information if available
+
         indexData['FILEUUID'] = fileUUID
 
         # Get file path from FLocat and extension
@@ -542,6 +546,7 @@ def index_mets_file_metadata(conn, uuid, metsFilePath, index, type, sipName):
         # Reset fileData['METS']['amdSec'], since it is updated in the loop
         # above. See http://stackoverflow.com/a/3975388 for explanation
         fileData['METS']['amdSec'] = {}
+        fileData['METS']['dmdSec'] = [dmdSecData]
 
     print 'Indexed AIP files and corresponding METS XML.'
 
