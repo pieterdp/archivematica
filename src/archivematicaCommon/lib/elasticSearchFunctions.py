@@ -291,6 +291,28 @@ def set_up_mapping(conn, index):
         )
         print 'AIP file mapping created.'
 
+
+def _get_sip_dc_metadata(root):
+    """
+    Get SIP-level DC metadata from the METS.
+
+    :param root: Root of the parsed METS
+    :return: Element for <dcterms:dublincore> or None
+    """
+    nsmap = { #TODO use XML namespaces from archivematicaXMLNameSpaces.py
+        'dcterms': 'http://purl.org/dc/terms/',
+        'dc': 'http://purl.org/dc/elements/1.1/',
+        'mets': 'http://www.loc.gov/METS/',
+    }
+    div = root.find('mets:structMap[@TYPE="physical"]/mets:div/mets:div[@LABEL="objects"]', namespaces=nsmap)
+    if not div:
+        return None
+    dmdid = div.get('DMDID')
+    if not dmdid:
+        return None
+    return root.find('mets:dmdSec[@ID="' + dmdid + '"]/mets:mdWrap/mets:xmlData/dcterms:dublincore', namespaces=nsmap)
+
+
 def connect_and_index_aip(uuid, name, filePath, pathToMETS, size=None, aips_in_aic=None, identifiers=[]):
     conn = connect_and_create_index('aips')
 
@@ -308,7 +330,7 @@ def connect_and_index_aip(uuid, name, filePath, pathToMETS, size=None, aips_in_a
     # Extract AIC identifier, other specially-indexed information
     aic_identifier = None
     is_part_of = None
-    dublincore = root.find('m:dmdSec/m:mdWrap/m:xmlData/dcterms:dublincore', namespaces=nsmap)
+    dublincore = _get_sip_dc_metadata(root)
     if dublincore is not None:
         aip_type = dublincore.findtext('dc:type', namespaces=nsmap) or dublincore.findtext('dcterms:type', namespaces=nsmap)
         if aip_type == "Archival Information Collection":
@@ -439,14 +461,13 @@ def index_mets_file_metadata(conn, uuid, metsFilePath, index, type, sipName):
     remove_tool_output_from_mets(tree)
 
     # get SIP-wide dmdSec
-    dmdSec = root.findall("m:dmdSec/m:mdWrap/m:xmlData", namespaces=nsmap)
     dmdSecData = {}
-    for item in dmdSec:
-        xml = ElementTree.tostring(item)
+    dublincore = _get_sip_dc_metadata(root)
+    if dublincore:
+        xml = ElementTree.tostring(dublincore)
         dmdSecData = xmltodict.parse(xml)
 
     # Extract isPartOf (for AIPs) or identifier (for AICs) from DublinCore
-    dublincore = root.find('m:dmdSec/m:mdWrap/m:xmlData/dcterms:dublincore', namespaces=nsmap)
     aic_identifier = None
     is_part_of = None
     if dublincore is not None:
