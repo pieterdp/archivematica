@@ -1,25 +1,283 @@
-<!DOCTYPE html>
-<html>
-  <head>
-    <meta charset="utf-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <title>Arrangement</title>
-    <meta name="description" content="">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
+{% extends "layout_fluid.html" %}
+{% load breadcrumb %}
 
-    {{content-for 'head'}}
+{% block title %}Arrangement{% endblock %}
 
-    <link rel="stylesheet" href="assets/vendor.css">
-    <link rel="stylesheet" href="assets/arrangement.css">
+{% block extra_js %}
+  <script src="{{ STATIC_URL }}js/arrange/bower_components/handlebars/handlebars.js"></script>
+  <script src="{{ STATIC_URL }}js/arrange/bower_components/ember/ember.debug.js"></script>
+  <script src="{{ STATIC_URL }}js/arrange/bower_components/ember/ember-template-compiler.js"></script>
+  <script src="{{ STATIC_URL }}js/arrange/bower_components/ember-data/ember-data.js"></script>
+  <script src="{{ STATIC_URL }}js/arrange/app/app.js"></script>
+  <script src="{{ STATIC_URL }}js/arrange/app/router.js"></script>
+  <script src="{{ STATIC_URL }}js/arrange/app/models/arrange.js"></script>
 
-    {{content-for 'head-footer'}}
-  </head>
-  <body>
-    {{content-for 'body'}}
+{% endblock %}
 
-    <script src="assets/vendor.js"></script>
-    <script src="assets/arrangement.js"></script>
+{% block extra_css %}
+<style type="text/css">
 
-    {{content-for 'body-footer'}}
-  </body>
-</html>
+h3 {
+  border-bottom: 1px solid #cccccc;
+}
+
+/* Search styling*/
+select {
+  width: auto;
+}
+
+.advanced_search_form_row {
+  clear: both;
+}
+
+.advanced_search_form_row select, .advanced_search_form_row input {
+  float: left;
+  margin: 5px;
+}
+
+#search_submit {
+  margin: 5px;
+}
+
+/* Filter styling */
+
+#filter_container {
+  width: 90%;
+  display: flex;
+  justify-content: space-around;
+  margin: 5px auto 10px;
+}
+
+
+/* Pane styling */
+#wrapper {
+  overflow: hidden;
+}
+
+.pane {
+  width: 48%;
+  float: left;
+  padding: 5px;
+  margin: 2px;
+  border: 1px solid #dddddd;
+  border-radius: 3px;
+}
+
+/* Backlog styling */
+#backlog {
+  padding-left: 10px;
+}
+
+.directory-list li {
+}
+
+.directory {
+  list-style-image: url('{{ STATIC_URL }}images/filefolder.png');
+}
+
+.directory.open {
+  list-style-image: url('{{ STATIC_URL }}images/filefolderopen.png');
+}
+
+.file {
+  list-style-image: url('{{ STATIC_URL }}images/page_white.png');
+}
+
+.selected {
+  border: solid 1px #ff0000;
+}
+
+/* Info styling */
+#info {
+}
+
+.warning:after {
+  content: url('{{ STATIC_URL }}images/error.png');
+  margin-left: 5px;
+}
+</style>
+{% endblock %}
+
+
+{% block content %}
+
+{% verbatim %}
+<script type="text/x-handlebars" data-template-name="arrange">
+
+<h2 id="title">SIP Arrangement</h2>
+
+<h3>Search backlog</h3>
+<form id='search_form'>
+  <div id='search_form_container'>
+    <div class='advanced_search_form_row advanced_search_form_row_multiple'>
+      <select class='form-control' style="visibility: hidden" title="boolean operator" class="search_op_selector">
+        <option value="or">or</option>
+        <option value="and">and</option>
+        <option value="not">not</option>
+      </select>
+
+      <input title="search query" class="aip-search-query-input" />
+
+      <select class='form-control' title="field name">
+        <option value="">Any</option>
+        <option value="filename">File name</option>
+        <option value="file_extension">File type (extension or PUID)</option>
+        <option value="accessionid">Accession number</option>
+        <option value="ingestdate">Ingest date (YYYY-MM-DD)</option>
+        <option value="sipuuid">SIP UUID</option>
+      </select>
+
+      <select class='form-control' title="query type">
+        <option value="term">Keyword</option>
+        <option value="string">Phrase</option>
+      </select>
+    </div>
+    <div class='advanced_search_form_row advanced_search_form_row_multiple'>
+      <select class='form-control' title="boolean operator" class="search_op_selector">
+        <option value="or">or</option>
+        <option value="and">and</option>
+        <option value="not">not</option>
+      </select>
+
+      <input title="search query" class="aip-search-query-input" />
+
+      <select class='form-control' title="field name">
+        <option value="">Any</option>
+        <option value="filename">File name</option>
+        <option value="file_extension">File type (extension or PUID)</option>
+        <option value="accessionid">Accession number</option>
+        <option value="ingestdate">Ingest date (YYYY-MM-DD)</option>
+        <option value="sipuuid">SIP UUID</option>
+      </select>
+
+      <select class='form-control' title="query type">
+        <option value="term">Keyword</option>
+        <option value="string">Phrase</option>
+      </select>
+    </div>
+  </div>
+  <div id='search_form_submit_container'>
+    <input type='submit' id='search_submit' class='btn primary' value='Search transfer backlog'>
+  </div>
+</form>
+
+<h3>Filter</h3>
+
+<div id='filter_container'>
+  <select class='form-control'>
+    <option>Extension: All</option>
+    <option>Extension: mp3</option>
+    <option>Extension: wmv</option>
+    <option>Extension: txt</option>
+    <option>Extension: weird</option>
+  </select>
+
+  <select class='form-control'>
+    <option>MIME: Audio</option>
+    <option>MIME: Text</option>
+    <option>MIME: Unknown</option>
+  </select>
+
+  <select class='form-control'>
+    <option>Arranged: Any</option>
+    <option>Arranged: Arranged</option>
+    <option>Arranged: Unarranged</option>
+  </select>
+</div>
+
+<div id='wrapper'>
+  <div id='backlog' class='pane'>
+    <h3>Backlog Search Results</h3>
+    <ul class='directory-list'>
+      <li class='directory'><a>sip-uuid</a></li>
+      <li class='directory open selected'><a>open sip-uuid</a>
+        <ul>
+          <li class='file'><a>file.mp3</a></li>
+          <li class='file'><a>description.txt</a></li>
+          <li class='directory'><a>subfolder</a></li>
+        </ul>
+      </li>
+      <li class='directory open'><a>open sip-uuid</a>
+        <ul>
+          <li class='file'><a>file.mp3</a></li>
+        </ul>
+      </li>
+    </ul>
+    <input type="button" id='deaccession' value="Deaccession">
+  </div>
+
+  <div id='info'class='pane'>
+    <h3>Report</h3>
+    <p><strong>1 transfer</strong>, <strong>25 objects</strong> selected</p>
+
+    <h4>File types</h4>
+    <h5>By extension</h5>
+    <table>
+      <tr>
+        <td><a>.mp3</a></td>
+        <td>3 objects</td>
+        <td>2.02 MB</td>
+        <td>2003-2005</td>
+        <td><a>deaccession all</a></td>
+      </tr>
+      <tr>
+        <td><a>.wmv</a></td>
+        <td>10 objects</td>
+        <td>7 MB</td>
+        <td>1999-2005</td>
+        <td><a>deaccession all</a></td>
+      </tr>
+      <tr>
+        <td><a>.txt</a></td>
+        <td>2 objects</td>
+        <td>0.02 MB</td>
+        <td>2003-2003</td>
+        <td><a>deaccession all</a></td>
+      </tr>
+      <tr>
+        <td class='warning'><a>.weird</a></td>
+        <td>10 objects</td>
+        <td>15.3 MB</td>
+        <td>1999-2005</td>
+        <td><a>deaccession all</a></td>
+      </tr>
+    </table>
+
+    <h5>By MIME type</h5>
+    <table>
+      <tr>
+        <td><a>audio</a></td>
+        <td>13 objects</td>
+        <td>9.02 MB</td>
+        <td>1999-2005</td>
+        <td><a>deaccession all</a></td>
+      </tr>
+      <tr>
+        <td><a>text</a></td>
+        <td>2 objects</td>
+        <td>0.02 MB</td>
+        <td>2003-2003</td>
+        <td><a>deaccession all</a></td>
+      </tr>
+      <tr>
+        <td><a>unknown</a></td>
+        <td>10 objects</td>
+        <td>15.3 MB</td>
+        <td>1999-2005</td>
+        <td><a>deaccession all</a></td>
+      </tr>
+    </table>
+
+    <h4>Date Range</h4>
+    <p><a>1999-2005</a></p>
+
+    <h4>Size on disk</h4>
+    <p><a>24.34 MB</a></p>
+
+  </div>
+</div>
+
+</script>
+{% endverbatim %}
+
+{% endblock %}
