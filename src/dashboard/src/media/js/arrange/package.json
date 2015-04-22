@@ -5,6 +5,10 @@
   "private": true,
   "homepage": "https://ww.archivematica.org",
   "license": "AGPL-3.0",
+  "dependencies": {
+    "ember": "",
+    "handlebars": ""
+  },
   "directories": {
     "doc": "doc",
     "test": "tests"
