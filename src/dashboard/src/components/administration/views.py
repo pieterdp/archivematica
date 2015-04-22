@@ -255,26 +255,32 @@ def _usage_check_directory_volume_size(path):
     # Get volume size (in 512 byte blocks)
     try:
         output = subprocess.check_output(["df", path])
-
-        # Second line returns disk usage-related values
-        usage_summary = output.split("\n")[1]
-
-        # Split value by whitespace and size (in blocks)
-        size = usage_summary.split()[1]
-
+        device, size, used, available, percent, mountpoint = output.split("\n")[1].split()
         return int(size) * 512
-    except Exception, e:
-        logger.exception(str(e))
+    except subprocess.CalledProcessError:
         return 0
 
-def _usage_get_directory_used_bytes(path):
-    """ Get total usage in bytes """
+def _usage_check_directory_used(path):
+    # Get total usage in bytes
     try:
         output = subprocess.check_output(["du", "--bytes", "--summarize", path])
         return output.split("\t")[0]
-    except Exception, e:
-        logger.exception(str(e))
+    except subprocess.CalledProcessError:
         return 0
+
+def _usage_shared_dir_path():
+    # Get shared directory path
+    clientConfigFilePath = os.path.join(os.sep, 'etc', 'archivematica', 'MCPClient', 'clientConfig.conf')
+    config = ConfigParser.SafeConfigParser()
+    config.read(clientConfigFilePath)
+
+    return config.get('MCPClient', 'sharedDirectoryMounted')
+
+def _usage_location_path(purpose):
+    # Get currently processing location
+    locations = storage_service.get_location(purpose=purpose)
+    location = locations[0]
+    return location['path']
 
 def clear_context(request, dir_id):
     usage_dirs = _usage_dirs(False)
@@ -295,8 +301,10 @@ def usage_clear(request, dir_id):
 
         # Determine if specific subdirectories need to be cleared, rather than
         # whole directory
-        if 'subdirectories' in dir_info:
-            dirs_to_empty = [os.path.join(dir_info['path'], subdir) for subdir in dir_info['subdirectories']] 
+        if dir_info.get('subdirectories') is not None:
+            dirs_to_empty = []
+            for subdirectory in dir_info['subdirectories']:
+                dirs_to_empty.append(os.path.join(dir_info['path'], subdirectory))
         else:
             dirs_to_empty = [dir_info['path']]
 
