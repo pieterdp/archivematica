@@ -233,21 +233,29 @@ def _usage_dirs(calculate_usage=True):
     dirs = collections.OrderedDict(dir_defs)
 
     # Resolve location paths and make relative paths absolute
-    for _, dir_spec in dirs.iteritems():
-        if 'contained_by' in dir_spec:
+    for directory in dirs:
+        if dirs[directory].get('location_purpose') is not None:
+            # If a location, determine path
+            dirs[directory]['path'] = _usage_location_path(dirs[directory]['location_purpose'])
+        elif dirs[directory].get('contained_by') is not None:
             # If contained, make path absolute
-            space = dir_spec['contained_by']
-            absolute_path = os.path.join(dirs[space]['path'], dir_spec['path'])
-            dir_spec['path'] = absolute_path
+            space = dirs[directory]['contained_by']
+            absolute_path = os.path.join(dirs[space]['path'], dirs[directory]['path'])
+            dirs[directory]['path'] = absolute_path
 
-            if calculate_usage:
-                dir_spec['size'] = dirs[space]['size']
-                dir_spec['used'] = _usage_get_directory_used_bytes(dir_spec['path'])
-        elif calculate_usage:
-            # Get size/usage of space
-            space_path = dir_spec['path']
-            dir_spec['size'] = _usage_check_directory_volume_size(space_path)
-            dir_spec['used'] = _usage_get_directory_used_bytes(space_path)
+    # Calculate usage/size, if requested
+    if calculate_usage:
+        for directory in dirs:
+            if dirs[directory].get('contained_by') is None:
+               # Get size/usage of space
+                space_path = dirs[directory]['path']
+                dirs[directory]['size'] = _usage_check_directory_volume_size(space_path)
+                dirs[directory]['used'] = _usage_check_directory_used(space_path)
+            else:
+                # Get size from containing space and calculate usage of specific path
+                space = dirs[directory]['contained_by']
+                dirs[directory]['size'] = dirs[space]['size']
+                dirs[directory]['used'] = _usage_check_directory_used(dirs[directory]['path'])
 
     return dirs
 
