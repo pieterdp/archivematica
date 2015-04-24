@@ -234,28 +234,20 @@ def _usage_dirs(calculate_usage=True):
 
     # Resolve location paths and make relative paths absolute
     for _, dir_spec in dirs.iteritems():
-        if 'location_purpose' in dir_spec:
-            # If a location, determine path
-            dir_spec['path'] = _usage_location_path(dir_spec['location_purpose'])
-        elif 'contained_by' in dir_spec:
+        if 'contained_by' in dir_spec:
             # If contained, make path absolute
             space = dir_spec['contained_by']
             absolute_path = os.path.join(dirs[space]['path'], dir_spec['path'])
             dir_spec['path'] = absolute_path
 
-    # Calculate usage/size, if requested
-    if calculate_usage:
-        for _, dir_spec in dirs.iteritems():
-            if 'contained_by' in dir_spec:
-                # Get size from containing space and calculate usage of specific path
-                space = dir_spec['contained_by']
+            if calculate_usage:
                 dir_spec['size'] = dirs[space]['size']
                 dir_spec['used'] = _usage_get_directory_used_bytes(dir_spec['path'])
-            else:
-                # Get size/usage of space
-                space_path = dir_spec['path']
-                dir_spec['size'] = _usage_check_directory_volume_size(space_path)
-                dir_spec['used'] = _usage_get_directory_used_bytes(space_path)
+        elif calculate_usage:
+            # Get size/usage of space
+            space_path = dir_spec['path']
+            dir_spec['size'] = _usage_check_directory_volume_size(space_path)
+            dir_spec['used'] = _usage_get_directory_used_bytes(space_path)
 
     return dirs
 
@@ -283,12 +275,6 @@ def _usage_get_directory_used_bytes(path):
     except Exception, e:
         logger.exception(str(e))
         return 0
-
-def _usage_location_path(purpose):
-    # Get currently processing location
-    locations = storage_service.get_location(purpose=purpose)
-    location = locations[0]
-    return location['path']
 
 def clear_context(request, dir_id):
     usage_dirs = _usage_dirs(False)
