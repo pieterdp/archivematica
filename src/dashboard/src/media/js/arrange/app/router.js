@@ -1,9 +1,13 @@
-import Ember from 'ember';
-import config from './config/environment';
+// import Ember from 'ember';
+// import config from './config/environment';
 
-var Router = Ember.Router.extend({
-  location: config.locationType
-});
+// var Router = Ember.Router.extend({
+//   location: config.locationType
+// });
 
-export default Router.map(function() {
+// export default Router.map(function() {
+// });
+
+Arrange.Router.map(function () {
+  this.resource('arrange', { path: '/' });
 });
