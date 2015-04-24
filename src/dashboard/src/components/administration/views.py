@@ -233,29 +233,29 @@ def _usage_dirs(calculate_usage=True):
     dirs = collections.OrderedDict(dir_defs)
 
     # Resolve location paths and make relative paths absolute
-    for directory in dirs:
-        if dirs[directory].get('location_purpose') is not None:
+    for _, dir_spec in dirs.iteritems():
+        if 'location_purpose' in dir_spec:
             # If a location, determine path
-            dirs[directory]['path'] = _usage_location_path(dirs[directory]['location_purpose'])
-        elif dirs[directory].get('contained_by') is not None:
+            dir_spec['path'] = _usage_location_path(dir_spec['location_purpose'])
+        elif 'contained_by' in dir_spec:
             # If contained, make path absolute
-            space = dirs[directory]['contained_by']
-            absolute_path = os.path.join(dirs[space]['path'], dirs[directory]['path'])
-            dirs[directory]['path'] = absolute_path
+            space = dir_spec['contained_by']
+            absolute_path = os.path.join(dirs[space]['path'], dir_spec['path'])
+            dir_spec['path'] = absolute_path
 
     # Calculate usage/size, if requested
     if calculate_usage:
-        for directory in dirs:
-            if dirs[directory].get('contained_by') is None:
-               # Get size/usage of space
-                space_path = dirs[directory]['path']
-                dirs[directory]['size'] = _usage_check_directory_volume_size(space_path)
-                dirs[directory]['used'] = _usage_check_directory_used(space_path)
-            else:
+        for _, dir_spec in dirs.iteritems():
+            if 'contained_by' in dir_spec:
                 # Get size from containing space and calculate usage of specific path
-                space = dirs[directory]['contained_by']
-                dirs[directory]['size'] = dirs[space]['size']
-                dirs[directory]['used'] = _usage_check_directory_used(dirs[directory]['path'])
+                space = dir_spec['contained_by']
+                dir_spec['size'] = dirs[space]['size']
+                dir_spec['used'] = _usage_get_directory_used_bytes(dir_spec['path'])
+            else:
+                # Get size/usage of space
+                space_path = dir_spec['path']
+                dir_spec['size'] = _usage_check_directory_volume_size(space_path)
+                dir_spec['used'] = _usage_get_directory_used_bytes(space_path)
 
     return dirs
 
@@ -263,26 +263,26 @@ def _usage_check_directory_volume_size(path):
     # Get volume size (in 512 byte blocks)
     try:
         output = subprocess.check_output(["df", path])
-        device, size, used, available, percent, mountpoint = output.split("\n")[1].split()
+
+        # Second line returns disk usage-related values
+        usage_summary = output.split("\n")[1]
+
+        # Split value by whitespace and size (in blocks)
+        size = usage_summary.split()[1]
+
         return int(size) * 512
-    except subprocess.CalledProcessError:
+    except Exception, e:
+        logger.exception(str(e))
         return 0
 
-def _usage_check_directory_used(path):
-    # Get total usage in bytes
+def _usage_get_directory_used_bytes(path):
+    """ Get total usage in bytes """
     try:
         output = subprocess.check_output(["du", "--bytes", "--summarize", path])
         return output.split("\t")[0]
-    except subprocess.CalledProcessError:
+    except Exception, e:
+        logger.exception(str(e))
         return 0
-
-def _usage_shared_dir_path():
-    # Get shared directory path
-    clientConfigFilePath = os.path.join(os.sep, 'etc', 'archivematica', 'MCPClient', 'clientConfig.conf')
-    config = ConfigParser.SafeConfigParser()
-    config.read(clientConfigFilePath)
-
-    return config.get('MCPClient', 'sharedDirectoryMounted')
 
 def _usage_location_path(purpose):
     # Get currently processing location
@@ -309,10 +309,8 @@ def usage_clear(request, dir_id):
 
         # Determine if specific subdirectories need to be cleared, rather than
         # whole directory
-        if dir_info.get('subdirectories') is not None:
-            dirs_to_empty = []
-            for subdirectory in dir_info['subdirectories']:
-                dirs_to_empty.append(os.path.join(dir_info['path'], subdirectory))
+        if 'subdirectories' in dir_info:
+            dirs_to_empty = [os.path.join(dir_info['path'], subdir) for subdir in dir_info['subdirectories']] 
         else:
             dirs_to_empty = [dir_info['path']]
 
