@@ -18,3 +18,5 @@
 // export default App;
 
 window.Arrange = Ember.Application.create();
+
+Arrange.ApplicationAdapter = DS.FixtureAdapter.extend();
