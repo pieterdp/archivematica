@@ -10,6 +10,8 @@
   <script src="{{ STATIC_URL }}js/arrange/bower_components/ember-data/ember-data.js"></script>
   <script src="{{ STATIC_URL }}js/arrange/app/app.js"></script>
   <script src="{{ STATIC_URL }}js/arrange/app/router.js"></script>
+  <script src="{{ STATIC_URL }}js/arrange/app/controllers/arrange_controller.js"></script>
+  <script src="{{ STATIC_URL }}js/arrange/app/controllers/directory_controller.js"></script>
   <script src="{{ STATIC_URL }}js/arrange/app/models/arrange.js"></script>
 
 {% endblock %}
@@ -189,11 +191,12 @@ select {
   <div id='backlog' class='pane'>
     <h3>Backlog Search Results</h3>
     <ul class='directory-list'>
-      {{#each directory in model}}
-        <li {{bind-attr class="directory.type directory.open:open"}}><a>{{directory.name}}</a></li>
+      {{#each directory in model itemController="directory"}}
+        <li {{bind-attr class="directory.type directory.open:open directory.selected:selected"}} {{action "toggleProperty" 'open' on="click"}}><a>{{directory.name}}</a></li>
       {{/each}}
     </ul>
-    <input type="button" id='deaccession' value="Deaccession">
+    <p><strong>{{file_count}}</strong> {{file_inflection}}, <strong>{{directory_count}}</strong> {{directory_inflection}}</p>
+    {{input type="button" id='deaccession' value='Deaccession' action='deaccession'}}
   </div>
 
   <div id='info'class='pane'>

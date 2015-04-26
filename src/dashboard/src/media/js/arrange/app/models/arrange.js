@@ -9,25 +9,21 @@ Arrange.Directory.FIXTURES = [
     {
         id: 1,
         name: 'sip-uuid',
-        open: false,
         type: 'directory',
     },
     {
         id: 2,
         name: 'open-sip-uuid',
-        open: true,
         type: 'directory',
     },
     {
         id: 3,
         name: 'another sip',
-        open: true,
         type: 'directory',
     },
     {
         id: 4,
         name: 'look a file',
-        open: null,
         type: 'file',
     }
 ]
