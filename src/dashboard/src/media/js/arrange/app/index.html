@@ -189,19 +189,9 @@ select {
   <div id='backlog' class='pane'>
     <h3>Backlog Search Results</h3>
     <ul class='directory-list'>
-      <li class='directory'><a>sip-uuid</a></li>
-      <li class='directory open selected'><a>open sip-uuid</a>
-        <ul>
-          <li class='file'><a>file.mp3</a></li>
-          <li class='file'><a>description.txt</a></li>
-          <li class='directory'><a>subfolder</a></li>
-        </ul>
-      </li>
-      <li class='directory open'><a>open sip-uuid</a>
-        <ul>
-          <li class='file'><a>file.mp3</a></li>
-        </ul>
-      </li>
+      {{#each directory in model}}
+        <li class='directory'><a>{{directory.name}}</a></li>
+      {{/each}}
     </ul>
     <input type="button" id='deaccession' value="Deaccession">
   </div>
