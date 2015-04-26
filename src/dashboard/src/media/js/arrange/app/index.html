@@ -192,7 +192,7 @@ select {
     <h3>Backlog Search Results</h3>
     <ul class='directory-list'>
       {{#each directory in model itemController="directory"}}
-        <li {{bind-attr class="directory.type directory.open:open directory.selected:selected"}} {{action "toggleProperty" 'open' on="click"}}><a>{{directory.name}}</a></li>
+        <li {{bind-attr class="directory.model.type directory.model.open:open directory.model.selected:selected"}} {{action "toggleProperty" 'open' on="click"}}><a>{{directory.model.name}}</a></li>
       {{/each}}
     </ul>
     <p><strong>{{file_count}}</strong> {{file_inflection}}, <strong>{{directory_count}}</strong> {{directory_inflection}}</p>
