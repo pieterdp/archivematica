@@ -190,7 +190,7 @@ select {
     <h3>Backlog Search Results</h3>
     <ul class='directory-list'>
       {{#each directory in model}}
-        <li class='directory'><a>{{directory.name}}</a></li>
+        <li {{bind-attr class="directory.type directory.open:open"}}><a>{{directory.name}}</a></li>
       {{/each}}
     </ul>
     <input type="button" id='deaccession' value="Deaccession">
