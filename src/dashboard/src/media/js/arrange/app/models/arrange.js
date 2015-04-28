@@ -1,11 +1,11 @@
 
-Arrange.Directory = DS.Model.extend({
+App.Directory = DS.Model.extend({
    name: DS.attr('string'),
    open: DS.attr('boolean'),
    type: DS.attr('string'),
 });
 
-Arrange.Directory.FIXTURES = [
+App.Directory.FIXTURES = [
     {
         id: 1,
         name: 'sip-uuid',

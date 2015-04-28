@@ -1,4 +1,4 @@
-Arrange.ArrangeController = Ember.ArrayController.extend({
+App.ArrangeController = Ember.ArrayController.extend({
     actions: {
         deaccession: function () {
             // FIXME What do I delete here?

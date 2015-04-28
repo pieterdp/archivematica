@@ -1,4 +1,4 @@
-Arrange.DirectoryController = Ember.Controller.extend({
+App.DirectoryController = Ember.Controller.extend({
     selected: false,
     open: false,
 

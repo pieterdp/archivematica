@@ -8,11 +8,11 @@
 // export default Router.map(function() {
 // });
 
-Arrange.Router.map(function () {
+App.Router.map(function () {
   this.resource('arrange', { path: '/' });
 });
 
-Arrange.ArrangeRoute = Ember.Route.extend({
+App.ArrangeRoute = Ember.Route.extend({
     model: function () {
         return this.store.find('directory');
     }
