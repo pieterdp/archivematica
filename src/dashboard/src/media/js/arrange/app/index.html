@@ -190,11 +190,7 @@ select {
 <div id='wrapper'>
   <div id='backlog' class='pane'>
     <h3>Backlog Search Results</h3>
-    <ul class='directory-list'>
-      {{#each directory in model itemController="directory"}}
-        <li {{bind-attr class="directory.model.type directory.model.open:open directory.model.selected:selected"}} {{action "toggleProperty" 'open' on="click"}}><a>{{directory.model.name}}</a></li>
-      {{/each}}
-    </ul>
+    {{em-tree model=model}}
     <p><strong>{{file_count}}</strong> {{file_inflection}}, <strong>{{directory_count}}</strong> {{directory_inflection}}</p>
     {{input type="button" id='deaccession' value='Deaccession' action='deaccession'}}
   </div>

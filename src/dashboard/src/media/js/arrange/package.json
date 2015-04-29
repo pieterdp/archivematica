@@ -7,6 +7,7 @@
   "license": "AGPL-3.0",
   "dependencies": {
     "ember": "",
+    "ember-idx-tree": "^0.1.1",
     "handlebars": ""
   },
   "directories": {
@@ -23,7 +24,6 @@
     "node": ">= 0.10.0"
   },
   "author": "",
-  "license": "MIT",
   "devDependencies": {
     "broccoli-asset-rev": "^2.0.2",
     "ember-cli": "0.2.3",

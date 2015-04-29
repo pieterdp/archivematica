@@ -12,6 +12,11 @@
     "handlebars": "~3.0.0",
     "jquery": "^1.11.1",
     "loader.js": "ember-cli/loader.js#3.2.0",
-    "qunit": "~1.17.1"
+    "qunit": "~1.17.1",
+    "ember-components": "~0.2.0"
+  },
+  "resolutions": {
+    "ember": "> 1.5.0-beta.3",
+    "handlebars": ">= 1.0.0 < 2.0.0"
   }
 }
