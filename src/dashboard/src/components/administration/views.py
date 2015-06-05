@@ -263,8 +263,11 @@ def _usage_check_directory_volume_size(path):
         size = usage_summary.split()[1]
 
         return int(size) * 512
-    except Exception, e:
-        logger.exception(str(e))
+    except OSError:
+        logger.exception('No such directory: {}'.format(path))
+        return 0
+    except subprocess.CalledProcessError:
+        logger.exception('Unable to determine size of {}.'.format(path))
         return 0
 
 def _usage_get_directory_used_bytes(path):
@@ -272,8 +275,11 @@ def _usage_get_directory_used_bytes(path):
     try:
         output = subprocess.check_output(["du", "--bytes", "--summarize", path])
         return output.split("\t")[0]
-    except Exception, e:
-        logger.exception(str(e))
+    except OSError:
+        logger.exception('No such directory: {}'.format(path))
+        return 0
+    except subprocess.CalledProcessError:
+        logger.exception('Unable to determine usage of {}.'.format(path))
         return 0
 
 def clear_context(request, dir_id):
@@ -313,9 +319,10 @@ def usage_clear(request, dir_id):
                     else:
                         shutil.rmtree(entry_path)
                 successes.append(directory)
-            except Exception, e:
-                logger.exception(str(e))
-                errors.append(str(e))
+            except OSError:
+                message = 'No such file or directory: {}'.format(directory)
+                logger.exception(message)
+                errors.append(message)
 
         # If any deletion attempts successed, summarize in flash message
         if len(successes):
