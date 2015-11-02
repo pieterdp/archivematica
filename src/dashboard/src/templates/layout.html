@@ -38,7 +38,7 @@
             {% url 'main.views.access_list' as url_access %}
             {% url 'components.administration.views.administration' as url_administration %}
 
-            <ul class="nav">
+            <ul class="nav navbar-nav">
 
               <li class="{% active request url_transfer %}"><a href="{{ url_transfer }}">Transfer</a></li>
               <li class="{% active request url_ingest %}"><a href="{{ url_ingest }}">Ingest</a></li>
