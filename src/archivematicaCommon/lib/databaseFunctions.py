@@ -119,7 +119,7 @@ def getAgentForFileUUID(fileUUID):
                 pass
     return agent
 
-def insertIntoEvents(fileUUID, eventIdentifierUUID="", eventType="", eventDateTime=None, eventDetail="", eventOutcome="", eventOutcomeDetailNote=""):
+def insertIntoEvents(fileUUID, eventIdentifierUUID="", eventType="", eventDateTime=None, eventDetail="", eventOutcome="", eventOutcomeDetailNote="", agent=None):
     """
     Creates a new entry in the Events table using the supplied arguments.
 
@@ -130,11 +130,13 @@ def insertIntoEvents(fileUUID, eventIdentifierUUID="", eventType="", eventDateTi
     :param str eventDetail: Can be blank. Will be used in the eventDetail element in the AIP METS.
     :param str eventOutcome: Can be blank. Will be used in the eventOutcome element in the AIP METS.
     :param str eventOutcomeDetailNote: Can be blank. Will be used in the eventOutcomeDetailNote element in the AIP METS.
+    :param int agent: ID of the Agent or User (in auth_user)
     """
     if eventDateTime is None:
         eventDateTime = getUTCDate()
 
-    agent = getAgentForFileUUID(fileUUID)
+    if agent is None:
+        agent = getAgentForFileUUID(fileUUID)
     if not eventIdentifierUUID:
         eventIdentifierUUID = str(uuid.uuid4())
 
