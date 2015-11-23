@@ -42,6 +42,7 @@ from django.utils import timezone
 from main.models import Agent, Derivation, DublinCore, Event, File, FileID, FPCommandOutput, SIP, SIPArrange, Transfer
 
 import archivematicaCreateMETSReingest
+from createMETSDataverse import create_dataverse_sip_dmdsec
 from archivematicaCreateMETSMetadataCSV import parseMetadata
 from archivematicaCreateMETSRights import archivematicaGetRights
 from archivematicaCreateMETSRightsDspaceMDRef import archivematicaCreateMETSRightsDspaceMDRef
@@ -479,6 +480,7 @@ def createEvent(digiprovMD, event_record):
     eventOutcomeDetail = etree.SubElement(eventOutcomeInformation, ns.premisBNS + "eventOutcomeDetail")
     etree.SubElement(eventOutcomeDetail, ns.premisBNS + "eventOutcomeDetailNote").text = escape(event_record.event_outcome_detail)
 
+    # TODO make this a FK to Agents too
     if event_record.linking_agent:
         linkingAgentIdentifier = etree.SubElement(event, ns.premisBNS + "linkingAgentIdentifier")
         etree.SubElement(linkingAgentIdentifier, ns.premisBNS + "linkingAgentIdentifierType").text = "Archivematica user pk"
@@ -506,6 +508,7 @@ def createDigiprovMDAgents(fileGroupIdentifier=None):
         #agents = etree.SubElement(xmlData, "agents")
         xmlData.append(createAgent(agent.identifiertype, agent.identifiervalue, agent.name, agent.agenttype))
 
+    # FIXME this assumes all linking agents are FKs not Agents
     # If this function is being called by other scripts, fileGroupIdentifier
     # will not be defined; just return right away in that case.
     try:
@@ -514,7 +517,11 @@ def createDigiprovMDAgents(fileGroupIdentifier=None):
         return ret
 
     for user_id, in user_ids:
-        user = User.objects.get(id=user_id)
+        try:
+            user = User.objects.get(id=user_id)
+        except Exception:
+            print(user_id, 'is not a User (probably an Agent)')
+            continue
 
         globalDigiprovMDCounter += 1
         digiprovMD = etree.Element(ns.metsBNS + "digiprovMD")
@@ -796,6 +803,9 @@ def createFileSec(directoryPath, parentDiv, baseDirectoryPath, baseDirectoryName
                     else:
                         dspaceMetsDMDID = ids
 
+            # TODO if Dataverse add to .tab file
+            # TODO if Dataverse add to AIP directory
+
             if GROUPID == "":
                 sharedVariablesAcrossModules.globalErrorCount += 1
                 print >>sys.stderr, "No groupID for file: \"", directoryPathSTR, "\""
@@ -1065,6 +1075,13 @@ if __name__ == '__main__':
     if dc != None:
         (dmdSec, ID) = dc
         structMapDivObjects.set("DMDID", ID)
+        root.append(dmdSec)
+    # Check for external (Dataverse) SIP-level dmdSecs
+    dv = create_dataverse_sip_dmdsec(baseDirectoryPath)
+    for dmdSec in dv:
+        dmdid = dmdSec.attrib['ID']
+        dmdids = structMapDivObjects.get("DMDID", '') + ' ' + dmdid
+        structMapDivObjects.set("DMDID", dmdids)
         root.append(dmdSec)
 
     for dmdSec in dmdSecs:
