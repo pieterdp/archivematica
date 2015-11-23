@@ -838,6 +838,31 @@ class ArchivesSpaceDIPObjectResourcePairing(models.Model):
         # set up permissions: https://code.djangoproject.com/ticket/18866
         verbose_name = u'ASDIPObjectResourcePairing'
 
+class ArchivesSpaceDOComponent(models.Model):
+    """
+    Represents a digital object component to be created in ArchivesSpace at the time an AIP is stored by Archivematica.
+
+    In ArchivesSpace, a digital object component is meant to be parented to a digital object record.
+    The workflow in use by the appraisal tab doesn't expose digital objects to the user, just components;
+    one digital object should be created as a parent for these components before creating the
+    components themselves.
+    """
+    id = models.AutoField(primary_key=True, db_column='pk')
+    sip = models.ForeignKey('SIP', to_field='uuid', null=True)
+    resourceid = models.CharField(max_length=150)
+    label = models.CharField(max_length=255, blank=True)
+    title = models.TextField(blank=True)
+
+class ArchivesSpaceDOComponentPairing(models.Model):
+    """
+    Tracks a pairing between a path within an AIP and an ArchivesSpace digital object component.
+    Unlike ArchivesSpaceDIPObjectResourcePairing, this tracks a relationship between paths rather than files by UUID;
+    only root nodes are represented, rather than entire directory trees.
+    This distinction occurs because, in the workflow in which this model is used, no digital objects or digital object components are created in ArchivesSpace to represent every single file within the AIP.
+    """
+    id = models.AutoField(primary_key=True, db_column='pk')
+    component = models.ForeignKey('ArchivesSpaceDOComponent')
+    relative_path = models.TextField()
 
 class TransferMetadataSet(models.Model):
     id = UUIDPkField()
