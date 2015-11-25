@@ -23,32 +23,80 @@
       {sTitle: 'Submit to PRONOM', mData: null}
     ];
 
-    var dtable = $('#files-table').dataTable({
-      'bLengthChange': false,
-      'bFilter': false,
-      'bAutoWidth': true,
-      'sPaginationType': 'full_numbers',
-      'bServerSide': true,
-      'sAjaxSource': '/transfer/get_unidentified_files/{{ uuid }}',
-      'aoColumns': cols,
-      'iDisplayLength': 5,
-      'fnServerData': function(sSource, aoData, fnCallback) {
-        $.getJSON(sSource, aoData, function(json) {
-          fnCallback(json);
+    function get_file_data(format) {
+        return $('#files-table').dataTable({
+          'bLengthChange': false,
+          'bFilter': false,
+          'bAutoWidth': false,
+          'sPaginationType': 'full_numbers',
+          'bServerSide': true,
+          'sAjaxSource': '/transfer/get_unidentified_files/{{ uuid }}?fmt=' + format,
+          'aoColumns': cols,
+          'iDisplayLength': 5,
+          'fnServerData': function(sSource, aoData, fnCallback) {
+            $.getJSON(sSource, aoData, function(json) {
+              fnCallback(json);
 
-          $('.stderror-col').readmore({
-            collapsedHeight: 45
-          });
+              $('.stderror-col').readmore({
+                collapsedHeight: 45
+              });
+            });
+          },
         });
-      },
+    }
+
+    var dtable = null;
+
+    $.ajax({
+        method: 'GET',
+        url: '/transfer/get_unidentified_file_formats/{{ uuid }}',
+        data: { uuid: '{{ uuid }}' },
+        success: function(data) {
+            var first = true;
+            $.each(data, function(key, value) {
+                var li_dom = '<li><a href="#">' + (key ? key : 'No extension') +
+                             ': ' + value + '</a></li>';
+
+                var li_fmt = $(li_dom).addClass('extension')
+                                      .attr('data-fmt', key);
+
+                if (first) {
+                    first = false;
+                    $(li_fmt).addClass('active');
+                    dtable = get_file_data(key);
+                }
+
+                $('#file-formats').append(
+                    li_fmt
+                );
+
+                $(li_fmt).click(function() {
+                    $('.extension').removeClass('active');
+                    $(this).addClass('active');
+
+                    dtable.fnDestroy();
+                    dtable = get_file_data($(this).attr('data-fmt'));
+                });
+            });
+        }
     });
   });
 </script>
 {% endblock %}
 
 {% block content %}
-    Total files in transfer: {{ total_file_count }} <br>
-    Total unidentified files: {{ unidentified_file_count }}
+    <div>
+        Total files in transfer: {{ total_file_count }}<br>
+        Total unidentified files: {{ unidentified_file_count }}<br>
+    </div>
+
+
+    <div>
+        <ul id="file-formats" class="pills">
+
+        </ul>
+    </div>
+
     <table id="files-table">
     </table>
 
